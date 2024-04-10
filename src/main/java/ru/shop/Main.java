@@ -1,5 +1,6 @@
 package ru.shop;
 
+import ru.shop.exception.BadOrderCountException;
 import ru.shop.model.Customer;
 import ru.shop.model.Order;
 import ru.shop.model.Product;
@@ -7,6 +8,9 @@ import ru.shop.model.ProductType;
 import ru.shop.repository.CustomerRepository;
 import ru.shop.repository.OrderRepository;
 import ru.shop.repository.ProductRepository;
+import ru.shop.sevices.CustomerService;
+import ru.shop.sevices.OrderService;
+import ru.shop.sevices.ProductService;
 
 import java.util.UUID;
 
@@ -14,12 +18,13 @@ public class Main {
     private static final ProductRepository productRepository = new ProductRepository();
     private static final CustomerRepository customerRepository = new CustomerRepository();
     private static final OrderRepository orderRepository = new OrderRepository();
+    private static final OrderService orderService = new OrderService(orderRepository);
+    private static final ProductService productService = new ProductService(productRepository);
+    private static final CustomerService customerService = new CustomerService(customerRepository);
 
 
-    private static final String CONST = "CONST";
-    private static final long LONG_CONST = 99999999999L;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws BadOrderCountException {
         var product = new Product();
 
         product.setId(UUID.randomUUID());
@@ -27,7 +32,7 @@ public class Main {
         product.setCost(99);
         product.setProductType(ProductType.GOOD);
 
-        System.out.println("product = " + product);
+        productService.save(product);
 
         var product2 = new Product();
 
@@ -36,17 +41,7 @@ public class Main {
         product2.setCost(55);
         product2.setProductType(ProductType.GOOD);
 
-        System.out.println("product2 = " + product2);
-
-
-        productRepository.save(product);
-        productRepository.save(product2);
-
-        var allProducts = productRepository.findAll();
-
-
-        System.out.println("products = " + allProducts);
-
+        productService.save(product2);
 
         var customer = new Customer();
         customer.setId(UUID.randomUUID());
@@ -54,9 +49,7 @@ public class Main {
         customer.setAge(33);
         customer.setPhone("89997776655");
 
-        customerRepository.save(customer);
-
-
+        customerService.save(customer);
 
         var customer2 = new Customer();
         customer2.setId(UUID.randomUUID());
@@ -64,35 +57,24 @@ public class Main {
         customer2.setAge(19);
         customer2.setPhone("89997776655");
 
-        customerRepository.save(customer2);
+        customerService.save(customer2);
 
-        System.out.println("customers = " + customerRepository.findAll());
+        orderService.add(customer2, product2, 100);
+        try {
+            orderService.add(customer2, product2, -20);
+        } catch (BadOrderCountException e) {
+            System.out.println("Ошибка: заказ от " + customer2.getName() + " продукта " + product2.getName() + " в количестве " + -20 + " не удался.");
+        };
+        orderService.add(customer, product2, 20);
 
-        var order = new Order();
-
-        order.setId(UUID.randomUUID());
-        order.setCustomerId(customer.getId());
-        order.setProductId(product.getId());
-        order.setCount(1);
-        order.setAmount(1000);
-        orderRepository.save(order);
-
-        var order2 = new Order();
-
-        order2.setId(UUID.randomUUID());
-        order2.setCustomerId(customer2.getId());
-        order2.setProductId(product2.getId());
-        order2.setCount(1);
-        order2.setAmount(500);
-
-        orderRepository.save(order2);
-
-        System.out.println("orders = " + orderRepository.findAll());
-
-        System.out.println("orders for customer = " + orderRepository.findCustomerOrders(customer.getId()));
-
-
-
+        System.out.println("Количество заказчиков = " + customerRepository.findAll().size());
+        System.out.println("Количество заказов = " + orderRepository.findAll().size());
+        System.out.println("Количество продукта " + ProductType.GOOD + " = "+ productService.findByProductType(ProductType.GOOD).size());
+        System.out.println("Количество продукта " + ProductType.SERVICE + " = "+ productService.findByProductType(ProductType.SERVICE).size());
+        System.out.println("Количество заказов для " + customer.getName() + " = "+ orderService.findByCustomer(customer).size());
+        System.out.println("Количество заказов для " + customer2.getName() + " = "+ orderService.findByCustomer(customer2).size());
+        System.out.println("Сумма заказов для " + customer.getName() + " = "+ orderService.getTotalCustomerAmount(customer));
+        System.out.println("Сумма заказов для " + customer2.getName() + " = "+ orderService.getTotalCustomerAmount(customer2));
         //
 
 
