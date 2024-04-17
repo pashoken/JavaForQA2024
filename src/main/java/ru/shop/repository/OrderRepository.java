@@ -5,7 +5,7 @@ import ru.shop.model.Order;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OrderRepository {
+public class OrderRepository implements IRepository<Order> {
 
     List<Order> orders = new ArrayList<>();
 

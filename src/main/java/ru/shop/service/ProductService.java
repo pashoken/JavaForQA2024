@@ -1,19 +1,18 @@
 package ru.shop.service;
 
+import lombok.RequiredArgsConstructor;
 import ru.shop.model.Product;
 import ru.shop.model.ProductType;
-import ru.shop.repository.ProductRepository;
+import ru.shop.repository.IRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@RequiredArgsConstructor
 public class ProductService {
 
-    private final ProductRepository repository;
+    private final IRepository<Product> repository;
 
-    public ProductService(ProductRepository repository) {
-        this.repository = repository;
-    }
 
     public void save(Product product) {
         repository.save(product);
